@@ -794,9 +794,19 @@ function showView(v) {
 }
 
 function scrollToQuote() {
+  // Make sure customer portal is showing
+  const quoteFlow = document.getElementById('quoteFlow');
+  const ownerPortal = document.getElementById('ownerPortal');
+  if (ownerPortal && ownerPortal.style.display !== 'none') {
+    ownerPortal.style.display = 'none';
+    document.getElementById('customerPortal').style.display = 'block';
+  }
   setTimeout(() => {
-    document.getElementById('quoteFlow').scrollIntoView({ behavior: 'smooth' });
-  }, 100);
+    if (quoteFlow) {
+      quoteFlow.style.display = 'block';
+      quoteFlow.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 150);
 }
 
 // ============================================================
