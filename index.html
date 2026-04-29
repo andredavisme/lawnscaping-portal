@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lawnscaping Services</title>
+<!-- No external Supabase JS needed — pure fetch API -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --primary: #1a1a1a;
+    --secondary: #f8f8f8;
+    --accent: #4a7c59;
+    --accent-light: #6aad7e;
+    --surface: #ffffff;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #666666;
+    --danger: #c0392b;
+    --warning: #e67e22;
+    --success: #27ae60;
+    --font: 'Inter', sans-serif;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); color: var(--text); background: var(--secondary); min-height: 100vh; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* NAV */
+  nav { background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 60px; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { display: flex; align-items: center; gap: 12px; }
+  .nav-brand img { height: 36px; object-fit: contain; display: none; }
+  .nav-brand img.loaded { display: block; }
+  .nav-brand span { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links { display: flex; gap: 8px; }
+  .nav-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 16px; border-radius: var(--radius); font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
+  .nav-btn:hover, .nav-btn.active { background: var(--accent); border-color: var(--accent); }
+
+  /* VIEWS */
+  .view { display: none; min-height: calc(100vh - 60px); }
+  .view.active { display: block; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, var(--primary) 0%, #2d4a38 100%); color: #fff; padding: 5rem 2rem; text-align: center; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; margin-bottom: 1rem; }
+  .hero p { font-size: 1.15rem; opacity: 0.85; max-width: 560px; margin: 0 auto 2.5rem; line-height: 1.6; }
+  .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: var(--radius); font-size: 1rem; font-weight: 500; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-light); border-color: var(--accent-light); text-decoration: none; }
+  .btn-outline { background: transparent; color: #fff; border-color: rgba(255,255,255,0.5); }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); text-decoration: none; }
+  .btn-sm { padding: 8px 16px; font-size: 0.875rem; }
+  .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+
+  /* CARDS & LAYOUT */
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+  .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+  .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
+  .section-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; margin-top: -1rem; }
+
+  /* SERVICE CARDS */
+  .service-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 1.5rem; cursor: pointer; transition: all 0.2s; background: var(--surface); }
+  .service-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+  .service-card.selected { border-color: var(--accent); background: #f0f8f3; }
+  .service-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.5rem; }
+  .service-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .service-card p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.5; }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.875rem; font-weight: 500; color: var(--text); }
+  input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-family: var(--font); font-size: 0.95rem; color: var(--text); background: #fff; transition: border-color 0.2s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,124,89,0.1); }
+  textarea { resize: vertical; min-height: 80px; }
+  .form-hint { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* STEPS */
+  .steps { display: flex; align-items: center; gap: 0; margin-bottom: 2rem; }
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--border); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600; }
+  .step.active .step-num { background: var(--accent); color: #fff; }
+  .step.done .step-num { background: var(--success); color: #fff; }
+  .step-label { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); }
+  .step.active .step-label { color: var(--text); }
+  .step-line { flex: 1; height: 2px; background: var(--border); min-width: 32px; }
+
+  /* QUOTE OUTPUT */
+  .quote-box { border: 2px solid var(--accent); border-radius: var(--radius); padding: 1.5rem; background: #f0f8f3; }
+  .quote-line { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .quote-line:last-child { border-bottom: none; font-weight: 600; font-size: 1.1rem; }
+  .quote-total { border-top: 2px solid var(--accent); margin-top: 8px; padding-top: 12px; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+  .badge-success { background: #e8f5e9; color: var(--success); }
+  .badge-warning { background: #fff3e0; color: var(--warning); }
+  .badge-danger { background: #fdecea; color: var(--danger); }
+  .badge-info { background: #e3f2fd; color: #1565c0; }
+  .badge-neutral { background: #f5f5f5; color: var(--text-muted); }
+
+  /* TABLES */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .data-table th { text-align: left; padding: 10px 12px; background: var(--secondary); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+  .data-table td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .data-table tr:hover td { background: #fafafa; }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 1rem; font-size: 0.9rem; }
+  .alert-success { background: #e8f5e9; border-left: 4px solid var(--success); color: #1b5e20; }
+  .alert-error { background: #fdecea; border-left: 4px solid var(--danger); color: #b71c1c; }
+  .alert-info { background: #e3f2fd; border-left: 4px solid #1565c0; color: #0d47a1; }
+
+  /* OWNER PORTAL */
+  .owner-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+  .owner-sidebar { background: var(--primary); color: #fff; padding: 1.5rem 0; }
+  .sidebar-section { padding: 0.5rem 1rem 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-top: 1rem; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 10px 1.5rem; cursor: pointer; color: rgba(255,255,255,0.75); font-size: 0.9rem; transition: all 0.15s; }
+  .sidebar-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .sidebar-item.active { background: var(--accent); color: #fff; }
+  .sidebar-item span.icon { font-size: 1rem; width: 20px; text-align: center; }
+  .owner-main { padding: 2rem; overflow-y: auto; }
+  .owner-panel { display: none; }
+  .owner-panel.active { display: block; }
+
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--surface); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+  .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 2rem; font-weight: 700; margin: 4px 0; color: var(--primary); }
+  .stat-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* CALENDAR */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .cal-day-name { text-align: center; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); padding: 4px; }
+  .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 0.85rem; border: 1px solid transparent; transition: all 0.15s; background: var(--surface); }
+  .cal-day:hover { border-color: var(--accent); }
+  .cal-day.available { background: #e8f5e9; color: var(--success); font-weight: 600; }
+  .cal-day.unavailable { background: #fdecea; color: var(--danger); cursor: default; }
+  .cal-day.other-month { opacity: 0.3; cursor: default; }
+  .cal-day.today { border-color: var(--accent); font-weight: 700; }
+
+  /* PRICING EDITOR */
+  .pricing-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .pricing-row.header { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+  /* OWNER LOGIN */
+  .login-wrap { min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 2rem; }
+  .login-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 2.5rem; width: 100%; max-width: 400px; }
+  .login-card h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .login-card p { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .owner-layout { grid-template-columns: 1fr; }
+    .owner-sidebar { display: none; }
+    .pricing-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* UTILS */
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 0.5rem; }
+  .gap-4 { gap: 1rem; }
+  .mb-1 { margin-bottom: 0.25rem; }
+  .mb-2 { margin-bottom: 0.5rem; }
+  .mb-4 { margin-bottom: 1rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .mt-4 { margin-top: 1rem; }
+  .mt-6 { margin-top: 1.5rem; }
+  .text-muted { color: var(--text-muted); }
+  .text-sm { font-size: 0.875rem; }
+  .font-bold { font-weight: 600; }
+  .w-full { width: 100%; }
+  .hidden { display: none !important; }
+  .loading { opacity: 0.6; pointer-events: none; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-brand">
+    <img id="navLogo" alt="Logo"/>
+    <span id="navBusiness">Loading...</span>
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showView('customer')">Get a Quote</button>
+    <button class="nav-btn" onclick="showView('owner')">Owner Portal</button>
+  </div>
+</nav>
+
+<!-- ============================================================ -->
+<!-- CUSTOMER VIEW -->
+<!-- ============================================================ -->
+<div id="view-customer" class="view active">
+
+  <!-- HERO -->
+  <div class="hero" id="heroSection">
+    <h1 id="heroTitle">Professional Outdoor Services</h1>
+    <p id="heroTagline">Get an instant quote or schedule a consultation for your property.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="scrollToQuote()">&#9997; Get a Quote</button>
+      <button class="btn btn-outline" onclick="document.getElementById('servicesSection').scrollIntoView({behavior:'smooth'})">Our Services</button>
+    </div>
+  </div>
+
+  <!-- SERVICES OVERVIEW -->
+  <div class="container" id="servicesSection">
+    <div class="mt-6 mb-4">
+      <h2 class="section-title">Our Services</h2>
+      <p class="section-subtitle">Select a service below to get started with your quote.</p>
+    </div>
+    <div class="card-grid" id="serviceCardsDisplay"></div>
+  </div>
+
+  <!-- QUOTE FLOW -->
+  <div class="container" id="quoteFlow">
+    <div class="card mt-4">
+      <div class="steps" id="stepsDisplay">
+        <div class="step active" id="step1"><div class="step-num">1</div><div class="step-label">Service</div></div>
+        <div class="step-line"></div>
+        <div class="step" id="step2"><div class="step-num">2</div><div class="step-label">Details</div></div>
+        <div class="step-line"></div>
+        <div class="step" id="step3"><div class="step-num">3</div><div class="step-label">Contact</div></div>
+        <div class="step-line"></div>
+        <div class="step" id="step4"><div class="step-num">4</div><div class="step-label">Quote</div></div>
+      </div>
+
+      <!-- Step 1: Select Service -->
+      <div id="quoteStep1">
+        <h3 class="font-bold mb-4">Select a Service</h3>
+        <div class="card-grid" id="serviceCardsQuote"></div>
+      </div>
+
+      <!-- Step 2: Job Details -->
+      <div id="quoteStep2" class="hidden">
+        <h3 class="font-bold mb-4">Job Details — <span id="selectedServiceName"></span></h3>
+        <div id="dynamicIntakeForm"></div>
+        <div class="flex gap-4 mt-6">
+          <button class="btn btn-outline" style="color:var(--text); border-color:var(--border);" onclick="goStep(1)">← Back</button>
+          <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Contact Info -->
+      <div id="quoteStep3" class="hidden">
+        <h3 class="font-bold mb-4">Your Contact Information</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="cfFirstName" placeholder="Jane"/>
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" id="cfLastName" placeholder="Smith"/>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="cfEmail" placeholder="jane@example.com"/>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="cfPhone" placeholder="(207) 555-0100"/>
+          </div>
+          <div class="form-group form-full">
+            <label>Service Address *</label>
+            <input type="text" id="cfAddress" placeholder="123 Main St"/>
+          </div>
+          <div class="form-group">
+            <label>City *</label>
+            <input type="text" id="cfCity" placeholder="Portland"/>
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" id="cfState" value="ME" placeholder="ME"/>
+          </div>
+          <div class="form-group">
+            <label>ZIP Code</label>
+            <input type="text" id="cfZip" placeholder="04101"/>
+          </div>
+        </div>
+        <div class="flex gap-4 mt-6">
+          <button class="btn btn-outline" style="color:var(--text); border-color:var(--border);" onclick="goStep(2)">← Back</button>
+          <button class="btn btn-primary" onclick="submitQuote()">Calculate Quote →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Quote Result -->
+      <div id="quoteStep4" class="hidden">
+        <div id="quoteResult"></div>
+        <div class="flex gap-4 mt-6" id="quoteActions"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- OWNER VIEW -->
+<!-- ============================================================ -->
+<div id="view-owner" class="view">
+
+  <!-- LOGIN -->
+  <div id="ownerLogin" class="login-wrap">
+    <div class="login-card">
+      <h2>Owner Portal</h2>
+      <p>Sign in to manage your business.</p>
+      <div id="loginAlert"></div>
+      <div class="form-group mb-4">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="owner@example.com"/>
+      </div>
+      <div class="form-group mb-6">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-primary w-full" onclick="ownerLogin()">Sign In</button>
+      <p class="text-sm text-muted mt-4" style="text-align:center;">
+        <a href="#" onclick="showDemoMode()">Continue in demo mode →</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD (shown after login) -->
+  <div id="ownerDashboard" class="hidden owner-layout">
+
+    <!-- SIDEBAR -->
+    <div class="owner-sidebar">
+      <div style="padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom:0.5rem;">
+        <div class="text-sm" style="color:rgba(255,255,255,0.5);">Owner Portal</div>
+        <div style="font-weight:600; font-size:0.95rem;" id="sidebarBusiness">Lawnscaping Services</div>
+      </div>
+      <div class="sidebar-section">Overview</div>
+      <div class="sidebar-item active" onclick="showPanel('dashboard')" id="nav-dashboard"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-section">Operations</div>
+      <div class="sidebar-item" onclick="showPanel('quotes')" id="nav-quotes"><span class="icon">📋</span> Quotes</div>
+      <div class="sidebar-item" onclick="showPanel('orders')" id="nav-orders"><span class="icon">✅</span> Orders</div>
+      <div class="sidebar-item" onclick="showPanel('consults')" id="nav-consults"><span class="icon">📞</span> Consult Requests</div>
+      <div class="sidebar-item" onclick="showPanel('customers')" id="nav-customers"><span class="icon">👤</span> Customers</div>
+      <div class="sidebar-section">Settings</div>
+      <div class="sidebar-item" onclick="showPanel('availability')" id="nav-availability"><span class="icon">📅</span> Availability</div>
+      <div class="sidebar-item" onclick="showPanel('pricing')" id="nav-pricing"><span class="icon">💲</span> Pricing Rules</div>
+      <div class="sidebar-item" onclick="showPanel('branding')" id="nav-branding"><span class="icon">🎨</span> Branding</div>
+      <div style="margin-top:auto; padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="sidebar-item" onclick="ownerLogout()" style="padding:8px 0;"><span class="icon">🚪</span> Sign Out</div>
+      </div>
+    </div>
+
+    <!-- MAIN PANELS -->
+    <div class="owner-main">
+
+      <!-- DASHBOARD -->
+      <div class="owner-panel active" id="panel-dashboard">
+        <h2 class="section-title">Dashboard</h2>
+        <div class="stat-grid" id="statGrid">
+          <div class="stat-card"><div class="stat-label">Open Quotes</div><div class="stat-value" id="statQuotes">—</div><div class="stat-sub">Pending response</div></div>
+          <div class="stat-card"><div class="stat-label">Scheduled Jobs</div><div class="stat-value" id="statOrders">—</div><div class="stat-sub">Upcoming orders</div></div>
+          <div class="stat-card"><div class="stat-label">Consult Requests</div><div class="stat-value" id="statConsults">—</div><div class="stat-sub">Needs contact</div></div>
+          <div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value" id="statCustomers">—</div><div class="stat-sub">All time</div></div>
+        </div>
+        <div class="card">
+          <h3 class="font-bold mb-4">Recent Activity</h3>
+          <div id="recentActivity"><div class="text-muted text-sm">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- QUOTES -->
+      <div class="owner-panel" id="panel-quotes">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="section-title" style="margin:0">Quotes</h2>
+        </div>
+        <div class="card">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Customer</th><th>Service</th><th>Type</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="quotesTable"><tr><td colspan="7" class="text-muted text-sm">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="owner-panel" id="panel-orders">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="section-title" style="margin:0">Orders</h2>
+        </div>
+        <div class="card">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Customer</th><th>Service</th><th>Scheduled</th><th>Total</th><th>Status</th><th>Payment</th></tr></thead>
+            <tbody id="ordersTable"><tr><td colspan="7" class="text-muted text-sm">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CONSULTS -->
+      <div class="owner-panel" id="panel-consults">
+        <h2 class="section-title">Consult Requests</h2>
+        <div class="card">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Customer</th><th>Service</th><th>Contact</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="consultsTable"><tr><td colspan="6" class="text-muted text-sm">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div class="owner-panel" id="panel-customers">
+        <h2 class="section-title">Customers</h2>
+        <div class="card">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Since</th></tr></thead>
+            <tbody id="customersTable"><tr><td colspan="4" class="text-muted text-sm">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AVAILABILITY -->
+      <div class="owner-panel" id="panel-availability">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="section-title" style="margin:0">Availability Calendar</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddSlotModal()">+ Add Available Day</button>
+        </div>
+        <div class="card mb-4">
+          <div class="flex justify-between items-center mb-4">
+            <button class="btn btn-sm btn-outline" style="color:var(--text);border-color:var(--border);" onclick="changeMonth(-1)">← Prev</button>
+            <strong id="calMonthLabel"></strong>
+            <button class="btn btn-sm btn-outline" style="color:var(--text);border-color:var(--border);" onclick="changeMonth(1)">Next →</button>
+          </div>
+          <div class="cal-header">
+            <div class="cal-day-name">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
+            <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="card">
+          <h3 class="font-bold mb-4">Available Slots</h3>
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Hours</th><th>Max Bookings</th><th>Current</th><th>Actions</th></tr></thead>
+            <tbody id="slotsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PRICING -->
+      <div class="owner-panel" id="panel-pricing">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="section-title" style="margin:0">Pricing Rules</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddPricingModal()">+ Add Rule</button>
+        </div>
+        <div id="pricingByService"></div>
+      </div>
+
+      <!-- BRANDING -->
+      <div class="owner-panel" id="panel-branding">
+        <h2 class="section-title">Branding & Business Info</h2>
+        <div class="alert alert-info mb-4">Changes here update the customer-facing site immediately. No code changes needed.</div>
+        <div class="card">
+          <div class="form-grid" id="brandingForm">
+            <div class="form-group form-full">
+              <label>Business Name</label>
+              <input type="text" id="bName" placeholder="Your Business Name"/>
+            </div>
+            <div class="form-group form-full">
+              <label>Tagline</label>
+              <input type="text" id="bTagline" placeholder="A short description shown on the homepage"/>
+            </div>
+            <div class="form-group form-full">
+              <label>Logo URL</label>
+              <input type="url" id="bLogoUrl" placeholder="https://..."/>
+              <span class="form-hint">Link to your logo image. Paste a publicly accessible URL.</span>
+            </div>
+            <div class="form-group">
+              <label>Primary Color</label>
+              <div class="flex gap-2 items-center">
+                <input type="color" id="bPrimaryColor" style="width:48px; height:38px; padding:2px; cursor:pointer;"/>
+                <input type="text" id="bPrimaryColorHex" placeholder="#1a1a1a" style="flex:1;"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Accent Color</label>
+              <div class="flex gap-2 items-center">
+                <input type="color" id="bAccentColor" style="width:48px; height:38px; padding:2px; cursor:pointer;"/>
+                <input type="text" id="bAccentColorHex" placeholder="#4a7c59" style="flex:1;"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Contact Phone</label>
+              <input type="tel" id="bPhone" placeholder="(207) 555-0100"/>
+            </div>
+            <div class="form-group">
+              <label>Contact Email</label>
+              <input type="email" id="bEmail" placeholder="hello@yourbusiness.com"/>
+            </div>
+            <div class="form-group form-full">
+              <label>Business Address</label>
+              <input type="text" id="bAddress" placeholder="123 Main St, Portland, ME 04101"/>
+            </div>
+          </div>
+          <div class="mt-6">
+            <button class="btn btn-primary" onclick="saveBranding()">Save &amp; Apply Changes</button>
+          </div>
+          <div id="brandingSaveMsg" class="mt-4"></div>
+        </div>
+      </div>
+
+    </div><!-- /owner-main -->
+  </div><!-- /owner-layout -->
+</div><!-- /view-owner -->
+
+<!-- ADD SLOT MODAL -->
+<div class="modal-overlay" id="slotModal">
+  <div class="modal">
+    <div class="modal-title">Add Available Day</div>
+    <div class="form-group mb-4">
+      <label>Date</label>
+      <input type="date" id="slotDate"/>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Start Time</label>
+        <input type="time" id="slotStart" value="08:00"/>
+      </div>
+      <div class="form-group">
+        <label>End Time</label>
+        <input type="time" id="slotEnd" value="17:00"/>
+      </div>
+    </div>
+    <div class="form-group mt-4">
+      <label>Max Bookings This Day</label>
+      <input type="number" id="slotMax" value="1" min="1"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="color:var(--text); border-color:var(--border);" onclick="closeModal('slotModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSlot()">Add Slot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRICING RULE MODAL -->
+<div class="modal-overlay" id="pricingModal">
+  <div class="modal">
+    <div class="modal-title">Add Pricing Rule</div>
+    <div class="form-group mb-4">
+      <label>Service</label>
+      <select id="prService"></select>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Rule Name</label>
+        <input type="text" id="prName" placeholder="e.g. Base Rate"/>
+      </div>
+      <div class="form-group">
+        <label>Rule Type</label>
+        <select id="prType">
+          <option value="base_rate">Base Rate</option>
+          <option value="per_unit">Per Unit</option>
+          <option value="multiplier">Multiplier</option>
+          <option value="flat_add">Flat Addition</option>
+          <option value="minimum">Minimum Charge</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Rate Value ($)</label>
+        <input type="number" id="prRate" placeholder="0.00" step="0.01"/>
+      </div>
+      <div class="form-group">
+        <label>Unit Label</label>
+        <input type="text" id="prUnit" placeholder="per load, per acre..."/>
+      </div>
+    </div>
+    <div class="form-group mt-4">
+      <label>Notes</label>
+      <textarea id="prNotes" placeholder="When does this rule apply?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="color:var(--text); border-color:var(--border);" onclick="closeModal('pricingModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePricingRule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// PURE FETCH DATA LAYER — no Supabase JS client
+// ============================================================
+const SUPABASE_URL = 'https://hhyhulqngdkwsxhymmcd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoeWh1bHFuZ2Rrd3N4aHltbWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzEyMDEsImV4cCI6MjA5MjcwNzIwMX0.dmSy7Q8Je5lEY4XCFzwvfPnkBYLebPE0yZMhy6Y8czI';
+const SCHEMA = 'client_lawnscaping';
+
+let _authToken = SUPABASE_ANON_KEY; // replaced on owner login
+
+function apiHeaders(write = false) {
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${_authToken}`,
+    'Content-Type': 'application/json',
+    'Accept-Profile': SCHEMA,
+    ...(write ? { 'Content-Profile': SCHEMA } : {}),
+    'Prefer': 'return=representation'
+  };
+}
+
+async function dbSelect(table, params = '') {
+  const sep = params ? '&' : '';
+  const url = `${SUPABASE_URL}/rest/v1/${table}?${params}${sep}apikey=${SUPABASE_ANON_KEY}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${_authToken}`,
+      'Accept-Profile': SCHEMA,
+      'Content-Type': 'application/json'
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) return { data: null, error: data, count: 0 };
+  return { data, error: null, count: data.length };
+}
+
+async function dbInsert(table, payload) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&apikey=${SUPABASE_ANON_KEY}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${_authToken}`,
+      'Content-Type': 'application/json',
+      'Content-Profile': SCHEMA,
+      'Accept-Profile': SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) return { data: null, error: data };
+  return { data: Array.isArray(data) ? data : [data], error: null };
+}
+
+async function dbUpdate(table, match, payload) {
+  const params = Object.entries(match).map(([k,v]) => `${k}=eq.${v}`).join('&');
+  const url = `${SUPABASE_URL}/rest/v1/${table}?${params}&select=*&apikey=${SUPABASE_ANON_KEY}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${_authToken}`,
+      'Content-Type': 'application/json',
+      'Content-Profile': SCHEMA,
+      'Accept-Profile': SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) return { data: null, error: data };
+  return { data, error: null };
+}
+
+async function dbDelete(table, match) {
+  const params = Object.entries(match).map(([k,v]) => `${k}=eq.${v}`).join('&');
+  const url = `${SUPABASE_URL}/rest/v1/${table}?${params}&apikey=${SUPABASE_ANON_KEY}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${_authToken}`,
+      'Content-Profile': SCHEMA,
+      'Accept-Profile': SCHEMA
+    }
+  });
+  return { error: res.ok ? null : await res.json() };
+}
+
+async function dbCount(table, params = '') {
+  const sep = params ? '&' : '';
+  const url = `${SUPABASE_URL}/rest/v1/${table}?${params}${sep}apikey=${SUPABASE_ANON_KEY}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${_authToken}`,
+      'Accept-Profile': SCHEMA,
+      'Prefer': 'count=exact',
+      'Accept': 'application/json'
+    }
+  });
+  const count = res.headers.get('content-range')?.split('/')[1];
+  return parseInt(count) || 0;
+}
+
+// Auth
+async function authSignIn(email, password) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data };
+  _authToken = data.access_token;
+  return { data, error: null };
+}
+
+async function authSignOut() {
+  await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${_authToken}` }
+  });
+  _authToken = SUPABASE_ANON_KEY;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  branding: null,
+  services: [],
+  pricingRules: [],
+  availability: [],
+  selectedService: null,
+  intakeData: {},
+  currentStep: 1,
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+  ownerLoggedIn: false,
+  demoMode: false
+};
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  await loadBranding();
+  await loadServices();
+}
+
+async function loadBranding() {
+  const { data: brandingArr } = await dbSelect('branding', 'is_active=eq.true&limit=1');
+  const data = brandingArr ? brandingArr[0] : null;
+  if (!data) return;
+  state.branding = data;
+  applyBranding(data);
+}
+
+function applyBranding(b) {
+  document.title = b.business_name || 'Lawnscaping Services';
+  document.getElementById('navBusiness').textContent = b.business_name;
+  document.getElementById('sidebarBusiness').textContent = b.business_name;
+  document.getElementById('heroTitle').textContent = b.business_name;
+  document.getElementById('heroTagline').textContent = b.tagline || 'Professional outdoor services for your property.';
+  const r = document.documentElement.style;
+  if (b.primary_color) r.setProperty('--primary', b.primary_color);
+  if (b.accent_color) { r.setProperty('--accent', b.accent_color); }
+  if (b.logo_url) {
+    const img = document.getElementById('navLogo');
+    img.src = b.logo_url;
+    img.onload = () => img.classList.add('loaded');
+  }
+  if (b.font_heading) r.setProperty('--font', `'${b.font_heading}', sans-serif`);
+}
+
+async function loadServices() {
+  const { data } = await dbSelect('services', 'is_active=eq.true&order=sort_order.asc');
+  if (!data) return;
+  state.services = data;
+  renderServiceCards();
+  renderServiceCardsQuote();
+}
+
+// ============================================================
+// VIEW ROUTING
+// ============================================================
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (v === 'owner' && !state.ownerLoggedIn && !state.demoMode) {
+    document.getElementById('ownerLogin').classList.remove('hidden');
+    document.getElementById('ownerDashboard').classList.add('hidden');
+  }
+}
+
+function scrollToQuote() {
+  setTimeout(() => {
+    document.getElementById('quoteFlow').scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}
+
+// ============================================================
+// SERVICE ICONS
+// ============================================================
+const SERVICE_ICONS = { dump_trailer: '🚛', lawnscaping: '🚜', stump_grinding: '🌳' };
+
+function renderServiceCards() {
+  const el = document.getElementById('serviceCardsDisplay');
+  el.innerHTML = state.services.map(s => `
+    <div class="service-card" onclick="selectServiceAndScroll('${s.service_id}')">
+      <div class="service-icon">${SERVICE_ICONS[s.service_category] || '⚙️'}</div>
+      <h3>${s.service_name}</h3>
+      <p>${s.description || ''}</p>
+    </div>
+  `).join('');
+}
+
+function renderServiceCardsQuote() {
+  const el = document.getElementById('serviceCardsQuote');
+  el.innerHTML = state.services.map(s => `
+    <div class="service-card${state.selectedService?.service_id === s.service_id ? ' selected' : ''}"
+      id="qscard-${s.service_id}" onclick="selectService('${s.service_id}')">
+      <div class="service-icon">${SERVICE_ICONS[s.service_category] || '⚙️'}</div>
+      <h3>${s.service_name}</h3>
+      <p>${s.description || ''}</p>
+    </div>
+  `).join('');
+}
+
+function selectServiceAndScroll(id) {
+  selectService(id);
+  document.getElementById('quoteFlow').scrollIntoView({ behavior: 'smooth' });
+  goStep(2);
+}
+
+function selectService(id) {
+  state.selectedService = state.services.find(s => s.service_id === id);
+  document.querySelectorAll('[id^="qscard-"]').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('qscard-' + id);
+  if (card) card.classList.add('selected');
+  document.getElementById('selectedServiceName').textContent = state.selectedService?.service_name || '';
+  renderIntakeForm(state.selectedService?.service_category);
+}
+
+// ============================================================
+// DYNAMIC INTAKE FORMS
+// ============================================================
+const INTAKE_FORMS = {
+  dump_trailer: [
+    { id: 'loads', label: 'Number of Loads', type: 'number', placeholder: '1', required: true },
+    { id: 'material_type', label: 'Material Type', type: 'select', options: ['General debris','Yard waste','Dirt/soil','Gravel/rock','Furniture/appliances','Mixed materials'], required: true },
+    { id: 'haul_distance_miles', label: 'Approximate Haul Distance (miles)', type: 'number', placeholder: '10' },
+    { id: 'notes', label: 'Additional Notes', type: 'textarea', placeholder: 'Location access, special materials, anything else we should know.' }
+  ],
+  lawnscaping: [
+    { id: 'area_acres', label: 'Approximate Area (acres)', type: 'number', placeholder: '0.5', required: true },
+    { id: 'service_type', label: 'Service Type', type: 'select', options: ['Regular mowing','Overgrowth clearing','Full property cleanup','Brush hogging','Field maintenance'], required: true },
+    { id: 'slope', label: 'Terrain / Slope', type: 'select', options: ['Flat','Mild slope','Steep slope','Varies'] },
+    { id: 'overgrowth_level', label: 'Overgrowth Level', type: 'select', options: ['Light — maintained','Moderate — some growth','Heavy — neglected','Very heavy — multi-season'] },
+    { id: 'recurring', label: 'Service Frequency', type: 'select', options: ['One-time','Weekly','Bi-weekly','Monthly'] },
+    { id: 'notes', label: 'Additional Notes', type: 'textarea', placeholder: 'Obstacles, gates, access instructions, or anything else.' }
+  ],
+  stump_grinding: [
+    { id: 'stump_count', label: 'Number of Stumps', type: 'number', placeholder: '1', required: true },
+    { id: 'avg_diameter_inches', label: 'Average Diameter (inches)', type: 'number', placeholder: '12', required: true },
+    { id: 'site_access', label: 'Site Access', type: 'select', options: ['Open / easy access','Tight — fence or structures nearby','Difficult — slope or obstacles','Unknown'] },
+    { id: 'tree_species', label: 'Tree Species (if known)', type: 'text', placeholder: 'Oak, Maple, Pine...' },
+    { id: 'notes', label: 'Additional Notes', type: 'textarea', placeholder: 'Root complexity, nearby structures, etc.' }
+  ]
+};
+
+function renderIntakeForm(category) {
+  const fields = INTAKE_FORMS[category] || [];
+  const el = document.getElementById('dynamicIntakeForm');
+  el.innerHTML = `<div class="form-grid">${fields.map(f => {
+    if (f.type === 'textarea') return `<div class="form-group form-full"><label>${f.label}${f.required ? ' *' : ''}</label><textarea id="intake_${f.id}" placeholder="${f.placeholder || ''}" onchange="captureIntake('${f.id}', this.value)"></textarea></div>`;
+    if (f.type === 'select') return `<div class="form-group"><label>${f.label}${f.required ? ' *' : ''}</label><select id="intake_${f.id}" onchange="captureIntake('${f.id}', this.value)"><option value="">Select...</option>${(f.options||[]).map(o => `<option>${o}</option>`).join('')}</select></div>`;
+    return `<div class="form-group"><label>${f.label}${f.required ? ' *' : ''}</label><input type="${f.type}" id="intake_${f.id}" placeholder="${f.placeholder || ''}" oninput="captureIntake('${f.id}', this.value)"/></div>`;
+  }).join('')}</div>`;
+}
+
+function captureIntake(field, value) {
+  state.intakeData[field] = value;
+}
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+function goStep(n) {
+  if (n === 2 && !state.selectedService) { alert('Please select a service first.'); return; }
+  state.currentStep = n;
+  [1,2,3,4].forEach(i => {
+    document.getElementById('quoteStep' + i).classList.toggle('hidden', i !== n);
+    const s = document.getElementById('step' + i);
+    s.classList.toggle('active', i === n);
+    s.classList.toggle('done', i < n);
+  });
+}
+
+// ============================================================
+// QUOTE CALCULATION (client-side using pricing_rules)
+// ============================================================
+async function submitQuote() {
+  const first = document.getElementById('cfFirstName').value.trim();
+  const last = document.getElementById('cfLastName').value.trim();
+  const email = document.getElementById('cfEmail').value.trim();
+  const address = document.getElementById('cfAddress').value.trim();
+  const city = document.getElementById('cfCity').value.trim();
+  if (!first || !last || !email || !address || !city) { alert('Please fill in all required contact fields.'); return; }
+
+  // Collect current intake values from DOM
+  const cat = state.selectedService?.service_category;
+  const fields = INTAKE_FORMS[cat] || [];
+  fields.forEach(f => {
+    const el = document.getElementById('intake_' + f.id);
+    if (el) state.intakeData[f.id] = el.value;
+  });
+
+  // Load pricing rules for this service
+  const { data: rules } = await dbSelect('pricing_rules', `service_id=eq.${state.selectedService.service_id}&is_active=eq.true&order=sort_order.asc`);
+
+  const lineItems = [];
+  let total = 0;
+  let isConsult = state.selectedService.requires_consult || false;
+
+  if (rules && rules.length > 0) {
+    rules.forEach(rule => {
+      let amount = 0;
+      const fieldVal = parseFloat(state.intakeData[rule.input_field]) || 0;
+
+      if (rule.rule_type === 'base_rate') { amount = parseFloat(rule.rate_value); }
+      else if (rule.rule_type === 'per_unit' && fieldVal > 0) { amount = fieldVal * parseFloat(rule.rate_value); }
+      else if (rule.rule_type === 'flat_add') { amount = parseFloat(rule.rate_value); }
+
+      if (amount > 0) {
+        lineItems.push({ label: rule.rule_name + (rule.unit_label ? ` (${rule.unit_label})` : ''), amount });
+        total += amount;
+      }
+    });
+
+    // Apply minimum if set
+    const minRule = rules.find(r => r.rule_type === 'minimum');
+    if (minRule && total < parseFloat(minRule.rate_value) && total > 0) {
+      lineItems.push({ label: 'Minimum charge adjustment', amount: parseFloat(minRule.rate_value) - total });
+      total = parseFloat(minRule.rate_value);
+    }
+  }
+
+  // If no rules configured or no calculable result — route to consult
+  if (lineItems.length === 0 || total === 0) isConsult = true;
+
+  // Save customer
+  let customerId = null;
+  const custRes = await dbInsert('customers', {
+    first_name: first, last_name: last, email,
+    phone: document.getElementById('cfPhone').value.trim()
+  });
+  if (custRes.error) console.error('Customer insert error:', custRes.error);
+  if (custRes.data && custRes.data.length > 0) customerId = custRes.data[0].customer_id;
+
+  // Save location
+  let locationId = null;
+  if (customerId) {
+    const locRes = await dbInsert('locations', {
+      customer_id: customerId,
+      address_line1: address,
+      city,
+      state: document.getElementById('cfState').value || 'ME',
+      postal_code: document.getElementById('cfZip').value || ''
+    });
+    if (locRes.error) console.error('Location insert error:', locRes.error);
+    if (locRes.data && locRes.data.length > 0) locationId = locRes.data[0].location_id;
+  }
+
+  // Save quote
+  const quoteRes = await dbInsert('quotes', {
+    customer_id: customerId,
+    location_id: locationId,
+    service_id: state.selectedService.service_id,
+    quote_type: isConsult ? 'consult' : 'instant',
+    status: 'draft',
+    intake_data: state.intakeData,
+    line_items: lineItems,
+    subtotal: total,
+    total_amount: total
+  });
+  if (quoteRes.error) console.error('Quote insert error:', quoteRes.error);
+
+  // If consult — save consult request too
+  if (isConsult && customerId) {
+    const consultRes = await dbInsert('consult_requests', {
+      customer_id: customerId,
+      service_id: state.selectedService.service_id,
+      intake_data: state.intakeData,
+      preferred_contact: 'email'
+    });
+    if (consultRes.error) console.error('Consult insert error:', consultRes.error);
+  }
+
+  renderQuoteResult(isConsult, lineItems, total, first);
+  goStep(4);
+}
+
+function renderQuoteResult(isConsult, lineItems, total, firstName) {
+  const el = document.getElementById('quoteResult');
+  const actions = document.getElementById('quoteActions');
+
+  if (isConsult) {
+    el.innerHTML = `
+      <div class="alert alert-info mb-4">📞 <strong>A consultation is needed</strong> for this job. We'll reach out to schedule a visit and provide an accurate quote.</div>
+      <div class="quote-box">
+        <h3 class="font-bold mb-2">Thanks, ${firstName}!</h3>
+        <p class="text-muted text-sm">Your request has been received. We'll contact you at the email you provided to schedule a free on-site estimate.</p>
+        <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
+          <strong>Service:</strong> ${state.selectedService.service_name}
+        </div>
+      </div>`;
+    actions.innerHTML = `<button class="btn btn-primary" onclick="resetQuote()">Submit Another Request</button>`;
+  } else {
+    const lines = lineItems.map(l => `
+      <div class="quote-line"><span>${l.label}</span><span>$${l.amount.toFixed(2)}</span></div>
+    `).join('');
+    el.innerHTML = `
+      <div class="alert alert-success mb-4">✅ Instant quote calculated for <strong>${firstName}</strong>!</div>
+      <div class="quote-box">
+        <h3 class="font-bold mb-4">Quote — ${state.selectedService.service_name}</h3>
+        ${lines}
+        <div class="quote-line quote-total"><span>Estimated Total</span><span>$${total.toFixed(2)}</span></div>
+        <p class="text-sm text-muted mt-4">This is an estimate. Final pricing may vary based on site conditions. We'll confirm before beginning work.</p>
+      </div>`;
+    actions.innerHTML = `
+      <button class="btn btn-primary" onclick="bookJob()">Book This Job →</button>
+      <button class="btn btn-outline" style="color:var(--text);border-color:var(--border);" onclick="resetQuote()">Start Over</button>`;
+  }
+}
+
+function bookJob() {
+  alert('Booking flow — connect to availability calendar. Coming in next build phase.');
+}
+
+function resetQuote() {
+  state.selectedService = null;
+  state.intakeData = {};
+  renderServiceCardsQuote();
+  goStep(1);
+}
+
+// ============================================================
+// OWNER AUTH
+// ============================================================
+async function ownerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  document.getElementById('loginAlert').innerHTML = '';
+  const { error } = await authSignIn(email, pass);
+  if (error) {
+    document.getElementById('loginAlert').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+    return;
+  }
+  activateOwnerDashboard();
+}
+
+function showDemoMode() {
+  state.demoMode = true;
+  activateOwnerDashboard();
+}
+
+function activateOwnerDashboard() {
+  state.ownerLoggedIn = true;
+  document.getElementById('ownerLogin').classList.add('hidden');
+  document.getElementById('ownerDashboard').classList.remove('hidden');
+  loadOwnerData();
+}
+
+async function ownerLogout() {
+  await authSignOut();
+  state.ownerLoggedIn = false;
+  state.demoMode = false;
+  document.getElementById('ownerLogin').classList.remove('hidden');
+  document.getElementById('ownerDashboard').classList.add('hidden');
+}
+
+// ============================================================
+// OWNER DATA LOADING
+// ============================================================
+async function loadOwnerData() {
+  await Promise.all([
+    loadStats(),
+    loadQuotesTable(),
+    loadOrdersTable(),
+    loadConsultsTable(),
+    loadCustomersTable(),
+    loadAvailability(),
+    loadPricingRules(),
+    loadBrandingForm()
+  ]);
+  renderCalendar();
+}
+
+async function loadStats() {
+  const [q, o, c, cu] = await Promise.all([
+    dbCount('quotes', 'status=eq.draft'),
+    dbCount('orders', 'status=eq.scheduled'),
+    dbCount('consult_requests', 'status=eq.pending'),
+    dbCount('customers', '')
+  ]);
+  document.getElementById('statQuotes').textContent = q.count ?? 0;
+  document.getElementById('statOrders').textContent = o.count ?? 0;
+  document.getElementById('statConsults').textContent = c.count ?? 0;
+  document.getElementById('statCustomers').textContent = cu.count ?? 0;
+}
+
+const statusBadge = (s) => {
+  const map = { draft:'neutral', sent:'info', accepted:'success', declined:'danger', expired:'danger',
+    scheduled:'info', in_progress:'warning', complete:'success', cancelled:'danger',
+    pending:'warning', contacted:'info', converted:'success', closed:'neutral' };
+  return `<span class="badge badge-${map[s]||'neutral'}">${s}</span>`;
+};
+
+async function loadQuotesTable() {
+  const { data } = await dbSelect('quotes', 'order=created_at.desc&limit=50');
+  const tb = document.getElementById('quotesTable');
+  if (!data || !data.length) { tb.innerHTML = '<tr><td colspan="7" class="text-muted text-sm">No quotes yet.</td></tr>'; return; }
+  tb.innerHTML = data.map(q => `<tr>
+    <td class="text-sm">${new Date(q.created_at).toLocaleDateString()}</td>
+    <td>${q.customers ? q.customers.first_name + ' ' + q.customers.last_name : '—'}</td>
+    <td class="text-sm">${q.services?.service_name || '—'}</td>
+    <td>${q.quote_type === 'consult' ? '<span class="badge badge-warning">Consult</span>' : '<span class="badge badge-info">Instant</span>'}</td>
+    <td>${q.total_amount ? '$' + parseFloat(q.total_amount).toFixed(2) : '—'}</td>
+    <td>${statusBadge(q.status)}</td>
+    <td><button class="btn btn-sm btn-primary" onclick="convertToOrder('${q.quote_id}')">→ Order</button></td>
+  </tr>`).join('');
+}
+
+async function loadOrdersTable() {
+  const { data } = await dbSelect('orders', 'order=created_at.desc&limit=50');
+  const tb = document.getElementById('ordersTable');
+  if (!data || !data.length) { tb.innerHTML = '<tr><td colspan="7" class="text-muted text-sm">No orders yet.</td></tr>'; return; }
+  tb.innerHTML = data.map(o => `<tr>
+    <td class="text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
+    <td>${o.customers ? o.customers.first_name + ' ' + o.customers.last_name : '—'}</td>
+    <td class="text-sm">${o.services?.service_name || '—'}</td>
+    <td class="text-sm">${o.scheduled_date || '—'}</td>
+    <td>${o.total_amount ? '$' + parseFloat(o.total_amount).toFixed(2) : '—'}</td>
+    <td>${statusBadge(o.status)}</td>
+    <td>${statusBadge(o.payment_status)}</td>
+  </tr>`).join('');
+}
+
+async function loadConsultsTable() {
+  const { data } = await dbSelect('consult_requests', 'order=created_at.desc&limit=50');
+  const tb = document.getElementById('consultsTable');
+  if (!data || !data.length) { tb.innerHTML = '<tr><td colspan="6" class="text-muted text-sm">No consult requests yet.</td></tr>'; return; }
+  tb.innerHTML = data.map(c => `<tr>
+    <td class="text-sm">${new Date(c.created_at).toLocaleDateString()}</td>
+    <td>${c.customers ? c.customers.first_name + ' ' + c.customers.last_name : '—'}</td>
+    <td class="text-sm">${c.services?.service_name || '—'}</td>
+    <td class="text-sm">${c.preferred_contact || '—'}</td>
+    <td>${statusBadge(c.status)}</td>
+    <td><button class="btn btn-sm btn-success" onclick="markContacted('${c.consult_id}')">Mark Contacted</button></td>
+  </tr>`).join('');
+}
+
+async function loadCustomersTable() {
+  const { data } = await dbSelect('customers', 'order=created_at.desc&limit=100');
+  const tb = document.getElementById('customersTable');
+  if (!data || !data.length) { tb.innerHTML = '<tr><td colspan="4" class="text-muted text-sm">No customers yet.</td></tr>'; return; }
+  tb.innerHTML = data.map(c => `<tr>
+    <td>${c.first_name} ${c.last_name}</td>
+    <td class="text-sm">${c.email || '—'}</td>
+    <td class="text-sm">${c.phone || '—'}</td>
+    <td class="text-sm">${new Date(c.created_at).toLocaleDateString()}</td>
+  </tr>`).join('');
+}
+
+async function loadAvailability() {
+  const { data } = await dbSelect('availability', 'order=available_date.asc');
+  state.availability = data || [];
+  renderSlotsTable();
+  renderCalendar();
+}
+
+function renderSlotsTable() {
+  const tb = document.getElementById('slotsTable');
+  const upcoming = state.availability.filter(s => s.slot_date >= new Date().toISOString().split('T')[0]);
+  if (!upcoming.length) { tb.innerHTML = '<tr><td colspan="5" class="text-muted text-sm">No availability slots set.</td></tr>'; return; }
+  tb.innerHTML = upcoming.map(s => `<tr>
+    <td>${s.slot_date}</td>
+    <td class="text-sm">${s.time_start} – ${s.time_end}</td>
+    <td>${s.max_bookings}</td>
+    <td>${s.current_bookings}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="deleteSlot('${s.slot_id}')">Remove</button></td>
+  </tr>`).join('');
+}
+
+async function loadPricingRules() {
+  const { data } = await dbSelect('pricing_rules', 'is_active=eq.true&order=sort_order.asc');
+  state.pricingRules = data || [];
+  renderPricingByService();
+}
+
+function renderPricingByService() {
+  const el = document.getElementById('pricingByService');
+  const grouped = {};
+  state.services.forEach(s => { grouped[s.service_id] = { name: s.service_name, rules: [] }; });
+  state.pricingRules.forEach(r => { if (grouped[r.service_id]) grouped[r.service_id].rules.push(r); });
+  el.innerHTML = Object.entries(grouped).map(([sid, g]) => `
+    <div class="card mb-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold">${g.name}</h3>
+        <span class="text-sm text-muted">${g.rules.length} rule${g.rules.length !== 1 ? 's' : ''}</span>
+      </div>
+      ${g.rules.length ? `
+        <table class="data-table">
+          <thead><tr><th>Rule Name</th><th>Type</th><th>Rate</th><th>Unit</th><th>Actions</th></tr></thead>
+          <tbody>${g.rules.map(r => `
+            <tr>
+              <td>${r.rule_name}</td>
+              <td><span class="badge badge-info">${r.rule_type}</span></td>
+              <td>$${parseFloat(r.rate_value).toFixed(2)}</td>
+              <td class="text-sm text-muted">${r.unit_label || '—'}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteRule('${r.rule_id}')">Remove</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>` : '<p class="text-muted text-sm">No rules yet. Add rules to enable instant quoting for this service.</p>'}
+    </div>
+  `).join('');
+}
+
+async function loadBrandingForm() {
+  const b = state.branding;
+  if (!b) return;
+  document.getElementById('bName').value = b.business_name || '';
+  document.getElementById('bTagline').value = b.tagline || '';
+  document.getElementById('bLogoUrl').value = b.logo_url || '';
+  document.getElementById('bPhone').value = b.contact_phone || '';
+  document.getElementById('bEmail').value = b.contact_email || '';
+  document.getElementById('bAddress').value = b.contact_address || '';
+  document.getElementById('bPrimaryColor').value = b.primary_color || '#1a1a1a';
+  document.getElementById('bPrimaryColorHex').value = b.primary_color || '#1a1a1a';
+  document.getElementById('bAccentColor').value = b.accent_color || '#4a7c59';
+  document.getElementById('bAccentColorHex').value = b.accent_color || '#4a7c59';
+
+  // Sync color pickers ↔ hex inputs
+  document.getElementById('bPrimaryColor').oninput = e => { document.getElementById('bPrimaryColorHex').value = e.target.value; };
+  document.getElementById('bPrimaryColorHex').oninput = e => { document.getElementById('bPrimaryColor').value = e.target.value; };
+  document.getElementById('bAccentColor').oninput = e => { document.getElementById('bAccentColorHex').value = e.target.value; };
+  document.getElementById('bAccentColorHex').oninput = e => { document.getElementById('bAccentColor').value = e.target.value; };
+}
+
+// ============================================================
+// OWNER ACTIONS
+// ============================================================
+function showPanel(name) {
+  document.querySelectorAll('.owner-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+}
+
+async function convertToOrder(quoteId) {
+  const date = prompt('Scheduled date (YYYY-MM-DD):');
+  if (!date) return;
+  const { data: qArr } = await dbSelect('quotes', `quote_id=eq.${quoteId}&limit=1`);
+  const q = qArr ? qArr[0] : null;
+  if (!q) return;
+  await dbInsert('orders', {
+    quote_id: quoteId, customer_id: q.customer_id, location_id: q.location_id,
+    service_id: q.service_id, scheduled_date: date, total_amount: q.total_amount, status: 'scheduled'
+  });
+  await dbUpdate('quotes', {quote_id: quoteId}, { status: 'accepted' });
+  alert('Order created!');
+  loadOrdersTable(); loadQuotesTable(); loadStats();
+}
+
+async function markContacted(consultId) {
+  await dbUpdate('consult_requests', {consult_id: consultId}, { status: 'contacted' });
+  loadConsultsTable(); loadStats();
+}
+
+async function saveBranding() {
+  const payload = {
+    business_name: document.getElementById('bName').value,
+    tagline: document.getElementById('bTagline').value,
+    logo_url: document.getElementById('bLogoUrl').value || null,
+    contact_phone: document.getElementById('bPhone').value,
+    contact_email: document.getElementById('bEmail').value,
+    contact_address: document.getElementById('bAddress').value,
+    primary_color: document.getElementById('bPrimaryColorHex').value,
+    accent_color: document.getElementById('bAccentColorHex').value,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await dbUpdate('branding', {is_active: true}, payload);
+  const msg = document.getElementById('brandingSaveMsg');
+  if (error) { msg.innerHTML = `<div class="alert alert-error">${error.message}</div>`; return; }
+  msg.innerHTML = `<div class="alert alert-success">✅ Branding updated! Refresh the customer-facing page to see changes.</div>`;
+  applyBranding({ ...state.branding, ...payload });
+  state.branding = { ...state.branding, ...payload };
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCalendar() {
+  const year = state.calYear, month = state.calMonth;
+  document.getElementById('calMonthLabel').textContent = new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date().toISOString().split('T')[0];
+  const availableDates = new Set(state.availability.map(s => s.slot_date));
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-day other-month"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls = availableDates.has(dateStr) ? 'available' : '';
+    const todayCls = dateStr === today ? 'today' : '';
+    html += `<div class="cal-day ${cls} ${todayCls}">${d}${availableDates.has(dateStr) ? '<div style="width:6px;height:6px;background:var(--success);border-radius:50%;margin-top:2px;"></div>' : ''}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function changeMonth(dir) {
+  state.calMonth += dir;
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+  renderCalendar();
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openAddSlotModal() {
+  document.getElementById('slotDate').valueAsDate = new Date();
+  document.getElementById('slotModal').classList.add('open');
+}
+
+async function saveSlot() {
+  const date = document.getElementById('slotDate').value;
+  const start = document.getElementById('slotStart').value;
+  const end = document.getElementById('slotEnd').value;
+  const max = parseInt(document.getElementById('slotMax').value) || 1;
+  if (!date) return;
+  await dbInsert('availability', { slot_date: date, time_start: start, time_end: end, max_bookings: max });
+  closeModal('slotModal');
+  loadAvailability();
+}
+
+async function deleteSlot(id) {
+  if (!confirm('Remove this availability slot?')) return;
+  await dbDelete('availability', {slot_id: id});
+  loadAvailability();
+}
+
+function openAddPricingModal() {
+  const sel = document.getElementById('prService');
+  sel.innerHTML = state.services.map(s => `<option value="${s.service_id}">${s.service_name}</option>`).join('');
+  document.getElementById('pricingModal').classList.add('open');
+}
+
+async function savePricingRule() {
+  const serviceId = document.getElementById('prService').value;
+  const name = document.getElementById('prName').value.trim();
+  const type = document.getElementById('prType').value;
+  const rate = parseFloat(document.getElementById('prRate').value) || 0;
+  const unit = document.getElementById('prUnit').value.trim();
+  const notes = document.getElementById('prNotes').value.trim();
+  if (!name || !serviceId) return;
+
+  // Map rule type to input_field
+  const inputFieldMap = { base_rate: null, per_unit: 'loads', flat_add: null, multiplier: null, minimum: null };
+
+  await dbInsert('pricing_rules', {
+    service_id: serviceId, rule_name: name, rule_type: type,
+    rate_value: rate, unit_label: unit, notes, is_active: true
+  });
+  closeModal('pricingModal');
+  loadPricingRules();
+}
+
+async function deleteRule(id) {
+  if (!confirm('Remove this pricing rule?')) return;
+  await dbUpdate('pricing_rules', {rule_id: id}, { is_active: false });
+  loadPricingRules();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Kick it off
+init();
+</script>
+</body>
+</html>
