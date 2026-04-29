@@ -794,19 +794,9 @@ function showView(v) {
 }
 
 function scrollToQuote() {
-  // Make sure customer portal is showing
-  const quoteFlow = document.getElementById('quoteFlow');
-  const ownerPortal = document.getElementById('ownerPortal');
-  if (ownerPortal && ownerPortal.style.display !== 'none') {
-    ownerPortal.style.display = 'none';
-    document.getElementById('customerPortal').style.display = 'block';
-  }
-  setTimeout(() => {
-    if (quoteFlow) {
-      quoteFlow.style.display = 'block';
-      quoteFlow.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, 150);
+  // Scroll to services section so user can pick a service
+  const target = document.getElementById('servicesSection') || document.getElementById('quoteFlow');
+  if (target) target.scrollIntoView({ behavior: 'smooth' });
 }
 
 // ============================================================
