@@ -194,6 +194,34 @@
   .loading { opacity: 0.6; pointer-events: none; }
   .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .view-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .toggle-opt {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.75);
+    padding: 6px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .toggle-opt.active {
+    background: white;
+    color: var(--primary, #2d6a2d);
+    font-weight: 600;
+  }
+  .toggle-opt:hover:not(.active) {
+    color: white;
+    background: rgba(255,255,255,0.2);
+  }
 </style>
 </head>
 <body>
@@ -205,8 +233,10 @@
     <span id="navBusiness">Loading...</span>
   </div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="showView('customer')">Get a Quote</button>
-    <button class="nav-btn" onclick="showView('owner')">Owner Portal</button>
+    <div class="view-toggle" id="viewToggle">
+      <button class="toggle-opt active" id="toggleCustomer" onclick="switchToggle('customer')">&#9997; Quote</button>
+      <button class="toggle-opt" id="toggleOwner" onclick="switchToggle('owner')">&#9965; Portal</button>
+    </div>
   </div>
 </nav>
 
@@ -782,11 +812,15 @@ async function loadServices() {
 // ============================================================
 // VIEW ROUTING
 // ============================================================
+function switchToggle(v) {
+  document.getElementById('toggleCustomer').classList.toggle('active', v === 'customer');
+  document.getElementById('toggleOwner').classList.toggle('active', v === 'owner');
+  showView(v);
+}
+
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
   if (v === 'owner' && !state.ownerLoggedIn && !state.demoMode) {
     document.getElementById('ownerLogin').classList.remove('hidden');
     document.getElementById('ownerDashboard').classList.add('hidden');
@@ -794,9 +828,11 @@ function showView(v) {
 }
 
 function scrollToQuote() {
-  // Scroll to services section so user can pick a service
-  const target = document.getElementById('servicesSection') || document.getElementById('quoteFlow');
-  if (target) target.scrollIntoView({ behavior: 'smooth' });
+  switchToggle('customer');
+  setTimeout(() => {
+    const target = document.getElementById('servicesSection') || document.getElementById('quoteFlow');
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
 }
 
 // ============================================================
