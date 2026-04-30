@@ -643,6 +643,7 @@ function apiHeaders(write = false) {
     'apikey': SUPABASE_ANON_KEY,
     'Authorization': `Bearer ${_authToken}`,
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
     'Accept-Profile': SCHEMA,
     ...(write ? { 'Content-Profile': SCHEMA } : {}),
     'Prefer': 'return=representation'
@@ -656,6 +657,7 @@ async function dbSelect(table, params = '') {
     headers: {
       'Authorization': `Bearer ${_authToken}`,
       'Accept-Profile': SCHEMA,
+      'Accept': 'application/json',
       'Content-Type': 'application/json'
     }
   });
@@ -671,6 +673,7 @@ async function dbInsert(table, payload) {
     headers: {
       'Authorization': `Bearer ${_authToken}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'Content-Profile': SCHEMA,
       'Accept-Profile': SCHEMA,
       'Prefer': 'return=representation'
@@ -690,6 +693,7 @@ async function dbUpdate(table, match, payload) {
     headers: {
       'Authorization': `Bearer ${_authToken}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'Content-Profile': SCHEMA,
       'Accept-Profile': SCHEMA,
       'Prefer': 'return=representation'
@@ -708,6 +712,7 @@ async function dbDelete(table, match) {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${_authToken}`,
+      'Accept': 'application/json',
       'Content-Profile': SCHEMA,
       'Accept-Profile': SCHEMA
     }
@@ -1140,10 +1145,10 @@ async function loadStats() {
     dbCount('consult_requests', 'status=eq.pending'),
     dbCount('customers', '')
   ]);
-  document.getElementById('statQuotes').textContent = q.count ?? 0;
-  document.getElementById('statOrders').textContent = o.count ?? 0;
-  document.getElementById('statConsults').textContent = c.count ?? 0;
-  document.getElementById('statCustomers').textContent = cu.count ?? 0;
+  document.getElementById('statQuotes').textContent = q ?? 0;
+  document.getElementById('statOrders').textContent = o ?? 0;
+  document.getElementById('statConsults').textContent = c ?? 0;
+  document.getElementById('statCustomers').textContent = cu ?? 0;
 }
 
 const statusBadge = (s) => {
@@ -1401,9 +1406,6 @@ async function savePricingRule() {
   const unit = document.getElementById('prUnit').value.trim();
   const notes = document.getElementById('prNotes').value.trim();
   if (!name || !serviceId) return;
-
-  // Map rule type to input_field
-  const inputFieldMap = { base_rate: null, per_unit: 'loads', flat_add: null, multiplier: null, minimum: null };
 
   await dbInsert('pricing_rules', {
     service_id: serviceId, rule_name: name, rule_type: type,
